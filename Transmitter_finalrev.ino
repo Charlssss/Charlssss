@@ -9,7 +9,6 @@ MPU6050 mpu;
 SoftwareSerial hc12(RX, TX);
 
 // NO LONGER A CONST. We will calculate this.
-// This is just a starting guess.
 float ACCEL_SENSITIVITY = 16384.0; 
 
 const float EARTHQUAKE_THRESHOLD = 0.014;
@@ -26,9 +25,6 @@ float g_offsetX = 0.0;
 float g_offsetY = 0.0;
 float g_offsetZ = 0.0;
 
-// -----------------------------------------------------------------
-// setup() and dmpDataReady() are UNCHANGED from your last version
-// -----------------------------------------------------------------
 void setup() {
   Wire.begin();
   Serial.begin(9600);
@@ -44,9 +40,7 @@ void setup() {
   mpu.setClockSource(MPU6050_CLOCK_PLL_EXT32K);
   mpu.setDHPFMode(MPU6050_DHPF_5);
 
-  // --- THIS IS THE UPGRADED CALIBRATION ---
-  findGravityOffsetsAndSensitivity();
-  // ---------------------------------------
+  findGravityOffsetsAndSensitivity(); //Calibration function
 
   mpu.setMotionDetectionThreshold(7);
   mpu.setMotionDetectionDuration(2);
@@ -60,9 +54,6 @@ void dmpDataReady() {
   mpuInterrupt = true;
 }
 
-// -----------------------------------------------------------------
-// --- THIS IS THE NEW, UPGRADED CALIBRATION FUNCTION ---
-// -----------------------------------------------------------------
 void findGravityOffsetsAndSensitivity() {
   Serial.println("Hard-resetting offsets to 0...");
   mpu.setXAccelOffset(0);
@@ -89,7 +80,7 @@ void findGravityOffsetsAndSensitivity() {
   // --- NEW SENSITIVITY CALCULATION ---
   
   // 1. Find the average RAW vector
-  // We use "double" for high precision in this one-time calculation
+  // use "double" for high precision
   double avgAX = sumAX / 1000.0;
   double avgAY = sumAY / 1000.0;
   double avgAZ = sumAZ / 1000.0;
@@ -98,12 +89,12 @@ void findGravityOffsetsAndSensitivity() {
   // This magnitude, by definition, IS 1.0g of gravity.
   double rawMag = sqrt(sq(avgAX) + sq(avgAY) + sq(avgAZ));
 
-  // 3. Set this as our new sensitivity!
+  // 3. Set this as new sensitivity
   ACCEL_SENSITIVITY = (float)rawMag;
 
   // ---------------------------------
 
-  // Now, calculate the offsets IN G's, using our new sensitivity
+  // Now, calculate the offsets IN G's, using new sensitivity
   g_offsetX = avgAX / ACCEL_SENSITIVITY;
   g_offsetY = avgAY / ACCEL_SENSITIVITY;
   g_offsetZ = avgAZ / ACCEL_SENSITIVITY;
@@ -117,18 +108,10 @@ void findGravityOffsetsAndSensitivity() {
   Serial.print("Y: "); Serial.println(g_offsetY, 4);
   Serial.print("Z: "); Serial.println(g_offsetZ, 4);
   
-  // The magnitude of these 3 offsets should now be 1.0!
+  // The magnitude of these 3 offsets should now be 1.0
   Serial.print("Offset Magnitude (should be 1.0): ");
   Serial.println(sqrt(sq(g_offsetX) + sq(g_offsetY) + sq(g_offsetZ)));
 }
-
-
-// -----------------------------------------------------------------
-// The rest of your code (calculatePGA, earthquakeIntensity, etc.)
-// is 100% UNCHANGED. It will now just use the *new*
-// ACCEL_SENSITIVITY and g_offset values, and the inflation
-// should be gone.
-// -----------------------------------------------------------------
 
 void calculatePGA(int16_t ax, int16_t ay, int16_t az) {
   float xAccel = ax / ACCEL_SENSITIVITY;
