@@ -19,7 +19,8 @@ void setup() {
 
 void loop() {
   // Check if data is available from the HC-12 module
-  
+
+  // old data receiver, recieves both string and float data values
   // if (hc12.available()) {
   //   char buffer[32];
   //   int index = 0;
